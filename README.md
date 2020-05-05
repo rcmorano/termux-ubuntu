@@ -1,9 +1,10 @@
 # Introduction
 
-These [baids] will setup a chroot inside a Termux [0] shell by downloading an Ubuntu core cloud image [1] and allow executing commands by using proot [2].
+These [baids] will setup a chroot inside a Termux [[0]] shell by downloading an Ubuntu core cloud image [[1]] and allow executing commands by using proot [[2]].
 
 # Instructions
 
+* Install termux [[0]]
 * Setup copy+paste snippet:
 ```
 # install depends
