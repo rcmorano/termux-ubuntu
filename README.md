@@ -19,7 +19,7 @@ baids-reload
 ```
 termux-ubuntu-setup bionic
 ```
-* Spawn a ubuntu-focal shell:
+* Spawn an ubuntu-focal shell:
 ```
 termux-ubuntu-shell focal 
 ```
