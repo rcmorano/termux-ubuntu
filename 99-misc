@@ -23,7 +23,10 @@ function termux-ubuntu-setup() {
   fi   
 
   cd ${CHROOT_DIR}
+  echo "[+] Deflating ubuntu-image for '${UBUNTU_CODENAME}'..."
   proot --link2symlink tar -xf ${INSTALL_DIR}/ubuntu.tar.gz --exclude='dev'||:
+
+  echo "[+] Setting up nameservers..."
   rm -f ${CHROOT_DIR}/etc/resolv.conf
   for ns in $NAMESERVERS
   do
