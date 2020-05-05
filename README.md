@@ -4,7 +4,7 @@ These [baids] will setup a chroot inside a Termux [[0]] shell by downloading an 
 
 # Instructions
 
-* Install termux [[0]]
+* Install termux [[0]] and spawn a shell
 * Setup copy+paste snippet:
 ```
 # install depends
