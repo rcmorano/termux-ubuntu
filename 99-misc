@@ -1,0 +1,116 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+function termux-ubuntu-init() {
+
+  export UBUNTU_CODENAME=${UBUNTU_CODENAME:-focal}
+  export INSTALL_DIR=${HOME}/ubuntu-shells/${UBUNTU_CODENAME}
+  export CHROOT_DIR=${INSTALL_DIR}/ubuntu-fs
+  export NAMESERVERS="1.1.1.1 8.8.8.8"
+
+}
+
+function termux-ubuntu-setup() {
+
+  termux-ubuntu-init
+
+  mkdir -p "${CHROOT_DIR}"
+  mkdir -p "${INSTALL_DIR}/binds"
+
+  # check if we have a working ubuntu tarball
+  if ! `tar tf ${INSTALL_DIR}/ubuntu.tar.gz &> /dev/null`
+  then
+    termux-ubuntu-download-tarball ${UBUNTU_CODENAME}
+  fi   
+
+  cd ${CHROOT_DIR}
+  proot --link2symlink tar -xf ${INSTALL_DIR}/ubuntu.tar.gz --exclude='dev'||:
+  rm -f ${CHROOT_DIR}/etc/resolv.conf
+  for ns in $NAMESERVERS
+  do
+    echo "nameserver ${ns}" >> ${CHROOT_DIR}/etc/resolv.conf
+  done
+
+  cd $OLDPWD
+
+}
+
+function termux-ubuntu-download-tarball() {
+
+    echo "[+] Downloading ubuntu-image"
+    case `dpkg --print-architecture` in
+    aarch64)
+      archurl="arm64" ;;
+    arm)
+      archurl="armhf" ;;
+    amd64)
+      archurl="amd64" ;;
+    i*86)
+      archurl="i386" ;;
+    x86_64)
+      archurl="amd64" ;;
+    *)
+      echo "unknown architecture"; exit 1 ;;
+    esac
+    curl "https://partner-images.canonical.com/core/${UBUNTU_CODENAME}/current/ubuntu-${UBUNTU_CODENAME}-core-cloudimg-${archurl}-root.tar.gz" -o ${INSTALL_DIR}/ubuntu.tar.gz
+
+}
+
+function termux-ubuntu-install-depends() {
+
+  which curl || pkg install curl
+  which proot || pkg install proot
+
+}
+
+function termux-ubuntu-exec() {
+
+  UBUNTU_CODENAME=$1
+  COMMAND=$(echo $@ | sed "s|${UBUNTU_CODENAME} ||g")
+  if [[ -z ${UBUNTU_CODENAME} ]] || [[ -z "${COMMAND}" ]]
+  then
+    echo "Usage: $FUNCNAME \$UBUNTU_CODENAME \$COMMAND_TO_EXEC"
+    echo "Example: $FUNCNAME focal ls"
+    return 1
+  fi
+
+  termux-ubuntu-init
+  
+  if [ ! -d "${CHROOT_DIR}" ]
+  then
+    echo "[!] Setup for '${UBUNTU_CODENAME}' not found, executing 'termux-ubuntu-setup ${UBUNTU_CODENAME}' to install..."
+    termux-ubuntu-setup ${UBUNTU_CODENAME}
+  fi
+
+  ## unset LD_PRELOAD in case termux-exec is installed
+  unset LD_PRELOAD
+
+  proot \
+    --link2symlink \
+    -0 \
+    -r "${CHROOT_DIR}" \
+    -b /dev \
+    -b /proc \
+    -b /data/data/com.termux/files/home:/root \
+    -b /sdcard:/mnt/sdcard \
+    -w /root \
+    /usr/bin/env -i \
+    HOME=/root \
+    PATH=/usr/local/sbin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/games:/usr/local/games \
+    TERM=${TERM} \
+    LANG=C.UTF-8 \
+    bash -c "${COMMAND}"
+}
+
+function termux-ubuntu-shell() {
+
+  UBUNTU_CODENAME=$1
+  if [[ -z ${UBUNTU_CODENAME} ]]
+  then
+    echo "Usage: $FUNCNAME \$UBUNTU_CODENAME"
+    echo "Example: $FUNCNAME focal"
+    return 1
+  fi
+
+  termux-ubuntu-exec ${UBUNTU_CODENAME} bash --login
+
+}
