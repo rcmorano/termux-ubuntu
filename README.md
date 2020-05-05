@@ -7,12 +7,12 @@ These [baids] will setup a chroot inside a Termux [0] shell by downloading an Ub
 * Setup copy+paste snippet:
 ```
 # install depends
-pkg install git
+which git || pkg install git
 # install baids
 curl -sSL https://raw.githubusercontent.com/rcmorano/baids/master/baids | bash -s install
 source ~/.baids/baids
 # install these baids
-git clone git@github.com:rcmorano/termux-ubuntu-baids.git ~/.baids/functions.d/termux-ubuntu
+git clone https://github.com/rcmorano/termux-ubuntu-baids.git  ~/.baids/functions.d/termux-ubuntu-baids
 baids-reload
 ```
 * Setup an ubuntu-bionic chroot (or let it be done by the fisrt shell/exec baid execution):
